@@ -1,85 +1,101 @@
-# import csv
-# from numpy import *
-# from xmlrpc.client import Boolean
-#
-# from sklearn.feature_selection import chi2
-# from sklearn.neural_network import MLPClassifier
-# from sklearn.model_selection import RepeatedStratifiedKFold
-# from sklearn.metrics import accuracy_score
-# from scipy.stats import ttest_rel
-# import numpy as np
-#
-# temperatured = []   # temperatura
-# nausea = []         # nudnosci
-# lumbarPain = []     # bol ledzwiowy
-# urinePushing = []   # popuszczanie moczu
-# micturitionPains = []   # Bóle związane z oddawaniem moczu
-# burningOfUrethra = []   # Pieczenie cewki moczowej
-#
-# inflammationOfUrinaryBladder = [] # zapalenie pęcherza moczowego
-# nephritisOfRenalPelvisOrigin = [] # Zapalenie nerek pochodzenia miedniczkowego
-#
-# size = 0
-#
-# with open('Zeszyt1.csv') as csv_file:
-#     csv_reader = csv.reader(csv_file, delimiter=',')
-#     for row in csv_reader:
-#         temperatured.append(float(row[0]))
-#         nausea.append(int(row[1]))
-#         lumbarPain.append(int(row[2]))
-#         urinePushing.append(int(row[3]))
-#         micturitionPains.append(int(row[4]))
-#         burningOfUrethra.append(int(row[5]))
-#
-#         inflammationOfUrinaryBladder.append(int(row[6]))
-#         nephritisOfRenalPelvisOrigin.append(int(row[7]))
-#
-#         size += 1
-#
-#
-# temperatured2 = temperatured.copy()
-# temperatured2[1] = 99
-#
-# print(temperatured)
-# print(temperatured2)
-# print(nausea)
-
 
 # Feature Selection with Univariate Statistical Tests
 from pandas import read_csv
 from sklearn.feature_selection import chi2
-from numpy import set_printoptions
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif
-
+from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.metrics import accuracy_score
+from scipy.stats import ttest_rel
+import numpy as np
 
 # load data
 filename = 'Zeszyt1.csv'
 namesToReadFromFile = ['temperatura', 'nudnosci', 'bolLedzwiowy', 'popuszczanieMoczu', 'boleZwiazaneZOddawaniemMoczu', 'pieczenieCewkiMoczowej', 'zapaleniePecherzaMoczowego', 'zapalenieNerekPochodzeniaMiedniczkowego']
-names = ['temperatura', 'nudnosci', 'bolLedzwiowy', 'popuszczanieMoczu', 'boleZwiazaneZOddawaniemMoczu', 'pieczenieCewkiMoczowej', 'zapaleniePecherzaMoczowego']
+
+############## zapaleniePecherzaMoczowego ###############
+
+print("\n =================== zapalenie pecherza moczowego ==================== \n ")
+
+names1 = ['temperatura', 'nudnosci', 'bolLedzwiowy', 'popuszczanieMoczu', 'boleZwiazaneZOddawaniemMoczu', 'pieczenieCewkiMoczowej', 'zapaleniePecherzaMoczowego']
+
 dataframe = read_csv(filename, names=namesToReadFromFile)
 array = dataframe.values
 
-X = array[:,0:6]
-Y = array[:,6]
+X1 = array[:,0:6]
+Y1 = array[:,6]
 
-(scores, pval) = chi2(X, Y)
-scoresList = scores.tolist()
-print(scoresList)
+(scores, pval) = chi2(X1, Y1)
+
+scoresList1 = scores.tolist()
+print(scoresList1)
 rankingNumeric = []
-allFeaturesNumber = len(scoresList)
-minimum = min(scoresList)-1
+allFeaturesNumber = len(scoresList1)
+minimum = min(scoresList1)-1
 
-
-file = open("ranking.txt", "w")
 for i in range(allFeaturesNumber):
-    index = scoresList.index(max(scoresList))
+    index = scoresList1.index(max(scoresList1))
     rankingNumeric.append(index)
-    result = str(index + 1) + " " + names[index]
+    result = str(index + 1) + " " + names1[index]
     print(result)
-    file.write(result + "\n")
-    scoresList[index] = minimum
-file.close()
-`
-print("=======================================")
-print(scoresList)
+    scoresList1[index] = minimum
+
+############## zapalenieNerekPochodzeniaMiedniczkowego ###############
+
+print("\n =================== zapalenieNerekPochodzeniaMiedniczkowego ==================== \n ")
+
+names2 = ['temperatura', 'nudnosci', 'bolLedzwiowy', 'popuszczanieMoczu', 'boleZwiazaneZOddawaniemMoczu', 'pieczenieCewkiMoczowej', 'zapalenieNerekPochodzeniaMiedniczkowego']
+
+dataframe = read_csv(filename, names=namesToReadFromFile)
+array = dataframe.values
+
+X2 = array[:,0:6]
+Y2 = array[:,7]
+
+(scores, pval) = chi2(X2, Y2)
+
+scoresList2 = scores.tolist()
+print(scoresList2)
+rankingNumeric = []
+allFeaturesNumber = len(scoresList2)
+minimum = min(scoresList2)-1
+
+for i in range(allFeaturesNumber):
+    index = scoresList2.index(max(scoresList2))
+    rankingNumeric.append(index)
+    result = str(index + 1) + " " + names2[index]
+    scoresList2[index] = minimum
+    print(result)
+
+############## Suma ###############
+
+print("\n =================== Suma ==================== \n ")
+
+names3 = ['temperatura', 'nudnosci', 'bolLedzwiowy', 'popuszczanieMoczu', 'boleZwiazaneZOddawaniemMoczu', 'pieczenieCewkiMoczowej', 'zapalenie...']
+
+dataframe = read_csv(filename, names=namesToReadFromFile)
+array = dataframe.values
+
+X3 = array[:,0:6]
+
+Y3_first_ilness = array[:,6]
+Y3_second_ilness = array[:,7]
+Y3 = Y3_second_ilness
+
+for i in range(len(Y3_first_ilness)):
+    Y3[i] = Y3_first_ilness[i] + (2 * Y3_second_ilness[i])
+
+(scores, pval) = chi2(X3, Y3)
+
+scoresList3 = scores.tolist()
+print(scoresList3)
+rankingNumeric = []
+allFeaturesNumber = len(scoresList3)
+minimum = min(scoresList3)-1
+
+for i in range(allFeaturesNumber):
+    index = scoresList3.index(max(scoresList3))
+    rankingNumeric.append(index)
+    result = str(index + 1) + " " + names3[index]
+    scoresList3[index] = minimum
+    print(result)
+
