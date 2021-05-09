@@ -8,7 +8,45 @@ from sklearn.metrics import accuracy_score
 from scipy.stats import ttest_rel
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 from datetime import datetime
+from matplotlib.table import Table
+import pandas
+
+def checkerboard_table(data, fmt='{:.2f}', bkg_colors=['yellow', 'white']):
+    fig, ax = plt.subplots()
+    ax.set_axis_off()
+    tb = Table(ax, bbox=[0,0,1,1])
+
+    nrows, ncols = data.shape
+    width, height = 1.0 / ncols, 1.0 / nrows
+
+    # Add cells
+    for (i,j), val in np.ndenumerate(data):
+
+        # Index either the first or second item of bkg_colors based on
+        # a checker board pattern
+        idx = [j % 2, (j + 1) % 2][i % 2]
+        color = bkg_colors[idx]
+        if val == 1:
+            tb.add_cell(i, j, width, height, text=fmt.format(val),
+                loc='center', facecolor="green")
+        elif val == 0:
+            tb.add_cell(i, j, width, height, text=fmt.format(val),
+                        loc='center', facecolor="white")
+        elif val == -1:
+            tb.add_cell(i, j, width, height, text=fmt.format(val),
+                        loc='center', facecolor="red")
+    # Row Labels...
+    for i, label in enumerate(data.columns):
+        tb.add_cell(i, -1, width, height, text=label, loc='right',
+                    edgecolor='none', facecolor='none')
+    # Column Labels...
+    for j, label in enumerate(data.columns):
+        tb.add_cell(-1, j, width, height/2, text=label, loc='center',
+                           edgecolor='none', facecolor='none')
+    ax.add_table(tb)
+    return fig
 
 # Set stdOut on file
 now = datetime.now()
@@ -71,7 +109,7 @@ for i in range(numberOfFeatures):
 ######################################
 
 # prepare for experiment
-momentum1 = 0 # Współczynniki uczenia
+momentum1 = 0
 momentum2 = .9
 momentums = [momentum1, momentum2]
 layerSize1 = 50
@@ -89,6 +127,8 @@ rskf = RepeatedStratifiedKFold(n_splits=numberOfFolds, n_repeats=numberOfRepeats
 scores = [[[] for x in range(numberOfEstimators)] for y in range(numberOfFeatures)]
 scoresAverage = [[] for y in range(numberOfEstimators)]
 Y = np.array(Y) # convert to numpy array
+
+
 
 # check for every number of features - top_1, top_2, ..., top_numberOfFeatures
 for currentComputingNumberOfFeatures in range(1, numberOfFeatures+1):
@@ -179,6 +219,12 @@ namesOfEstimators  = ["[Momentum: " + str(momentum1) + ", LayerSize: " + str(lay
     str(layerSize3) + "]", "[Momentum: " + str(momentum2) + ", LayerSize: " + str(layerSize1) + "]",
     "[Momentum: " + str(momentum2) + ", LayerSize: " + str(layerSize2) + "]", "[Momentum: " + str(momentum2)
     + ", LayerSize: " + str(layerSize3) + "]"]
+
+namesOfEstimatorsShort  = ["[M: " + str(momentum1) + ", L: " + str(layerSize1) + "]", "[M: " +
+    str(momentum1) + ", L: " + str(layerSize2) + "]", "[M: " + str(momentum1) + ", L: " +
+    str(layerSize3) + "]", "[M: " + str(momentum2) + ", L: " + str(layerSize1) + "]",
+    "[M: " + str(momentum2) + ", L: " + str(layerSize2) + "]", "[M: " + str(momentum2)
+    + ", L: " + str(layerSize3) + "]"]
 alpha = .05
 
 for i in range(len(maxResults)):
@@ -187,7 +233,7 @@ for i in range(len(maxResults)):
         idOfMax = i
         continue
 
-    print( namesOfEstimators[i])
+    # print( "TEST DAW ", maxResults[i])
     test = ttest_rel(maxResults[i], maxResults[idOfMax])
     T = test.statistic
     p = test.pvalue
@@ -198,27 +244,89 @@ for i in range(len(maxResults)):
         print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is better than ", namesOfEstimators[idOfMax])
         idOfMax = i
 
+# mapOfResoults = [[0 for x in range(len(maxResults))] for y in range(len(maxResults))]
 
-print("==================== DAWID ======================")
-
+tabWidth = len(maxResults)
+mapOfResoults = np.zeros(tabWidth * tabWidth)
 for i in range(len(maxResults)):
     for j in range(i+1, len(maxResults)):
+
+
+        # # print( "TEST DAW ", maxResults[i])
+        # test = ttest_rel(maxResults[i], maxResults[idOfMax])
+        # T = test.statistic
+        # p = test.pvalue
+        #
+        # if p > alpha:
+        #     print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " There are no significant statistical differences between ", namesOfEstimators[idOfMax], " and ", namesOfEstimators[i])
+        # elif T > 0:
+        #     print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is better than ", namesOfEstimators[idOfMax])
+        #     idOfMax = i
+
         test = ttest_rel(maxResults[i], maxResults[j])
-
-        print("sth dupa ", maxResults[i])
-
         T = test.statistic
         p = test.pvalue
-        result = "p: " + str(p) + " T: " + str(T)
-        print(result)
+        # result = "p: " + str(p) + " T: " + str(T)
+        # print(result)
 
         if p > alpha:
-            result = "Brak istotnych różnic statystycznych między " + namesOfEstimators[i] + " a " + namesOfEstimators[j] + "\n"
+            mapOfResoults[i * tabWidth + j] = 0
+            mapOfResoults[j * tabWidth + i] = 0
         elif T > 0:
-            result = namesOfEstimators[i] + " osiągnął lepszy wynik od " + namesOfEstimators[j] + "\n"
+            mapOfResoults[i * tabWidth + j] = 1
+            mapOfResoults[j * tabWidth + i] = -1
         else:
-            result = namesOfEstimators[j] + " osiągnął lepszy wynik od " + namesOfEstimators[i] + "\n"
-        print(result)
+            mapOfResoults[i * tabWidth + j] = -1
+            mapOfResoults[j * tabWidth + i] = 1
+
+print(mapOfResoults)
+
+# Reshape things into a 9x9 grid.
+mapOfResoults = mapOfResoults.reshape((tabWidth, tabWidth))
+
+# row_labels = namesOfEstimators
+# col_labels = namesOfEstimators
+# plt.matshow(mapOfResoults)
+# plt.xticks(range(tabWidth), col_labels)
+# plt.yticks(range(tabWidth), row_labels)
+#
+# xcoords = [0.5, 1.5, 2.5, 3.5, 4.5]
+# for xc in xcoords:
+#     plt.axvline(x=xc)
+#     # plt.ayvline(y=xc)
+#
+#
+# plt.show()
+#
+# data = pandas.DataFrame(mapOfResoults,
+#                         columns=namesOfEstimators)
+# checkerboard_table(data)
+# plt.show()
+
+data = pandas.DataFrame(mapOfResoults,
+                        columns=namesOfEstimatorsShort)
+checkerboard_table(data)
+plt.show()
+# print("==================== DAWID ======================")
+#
+# for i in range(len(maxResults)):
+#     for j in range(i+1, len(maxResults)):
+#         test = ttest_rel(maxResults[i], maxResults[j])
+#
+#         print("sth dupa ", maxResults[i])
+#
+#         T = test.statistic
+#         p = test.pvalue
+#         result = "p: " + str(p) + " T: " + str(T)
+#         print(result)
+#
+#         if p > alpha:
+#             result = "Brak istotnych różnic statystycznych między " + namesOfEstimators[i] + " a " + namesOfEstimators[j] + "\n"
+#         elif T > 0:
+#             result = namesOfEstimators[i] + " osiągnął lepszy wynik od " + namesOfEstimators[j] + "\n"
+#         else:
+#             result = namesOfEstimators[j] + " osiągnął lepszy wynik od " + namesOfEstimators[i] + "\n"
+#         print(result)
 
 
 sys.stdout = original_stdout # Reset the standard output to its original value

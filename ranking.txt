@@ -1,6 +1,0 @@
-5 boleZwiazaneZOddawaniemMoczu
-4 popuszczanieMoczu
-3 bolLedzwiowy
-2 nudnosci
-6 pieczenieCewkiMoczowej
-1 temperatura
