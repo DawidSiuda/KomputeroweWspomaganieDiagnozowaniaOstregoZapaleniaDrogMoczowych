@@ -13,7 +13,7 @@ from datetime import datetime
 from matplotlib.table import Table
 import pandas
 
-def checkerboard_table(data, fmt='{:.2f}', bkg_colors=['yellow', 'white']):
+def draw_results(data, fmt='{:.2f}'):
     fig, ax = plt.subplots()
     ax.set_axis_off()
     tb = Table(ax, bbox=[0,0,1,1])
@@ -26,8 +26,6 @@ def checkerboard_table(data, fmt='{:.2f}', bkg_colors=['yellow', 'white']):
 
         # Index either the first or second item of bkg_colors based on
         # a checker board pattern
-        idx = [j % 2, (j + 1) % 2][i % 2]
-        color = bkg_colors[idx]
         if val == 1:
             tb.add_cell(i, j, width, height, text=fmt.format(val),
                 loc='center', facecolor="green")
@@ -81,7 +79,7 @@ for i in range(len(Y_first_ilness)):
     Y[i] = Y_first_ilness[i]
 
 print("==================================")
-print("== Sick/healthy:")
+print("== Sick/healthy vector:")
 print("==================================")
 print(Y)
 
@@ -107,14 +105,12 @@ for i in range(numberOfFeatures):
 ######################################
 # Tests
 ######################################
-
-# prepare for experiment
 momentum1 = 0
 momentum2 = .9
 momentums = [momentum1, momentum2]
 layerSize1 = 50
-layerSize2 = 100
-layerSize3 = 150
+layerSize2 = 200
+layerSize3 = 450
 layerSizes = [layerSize1, layerSize2, layerSize3]
 numberOfEstimators = len(layerSizes)*len(momentums)
 numberOfObjects = len(X)
@@ -196,8 +192,6 @@ for i in range(len(scores)):
             scoresAverage[i].append(s)
             print(namesOfEstimators[i], " ", str(j+1), " ", str(s))
 
-print(scoresAverage)
-
 # get maximum results
 maxResults = []
 i = 0
@@ -207,9 +201,7 @@ for estimatorScores in scoresAverage:
     maxResults.append(scores[i][index])
     i += 1
 
-
-
-# perform statistic tests and save results
+# Perform statistic tests and show results
 print("==================================")
 print("== Looking for the best set of parametars")
 print("==================================")
@@ -225,109 +217,41 @@ namesOfEstimatorsShort  = ["[M: " + str(momentum1) + ", L: " + str(layerSize1) +
     str(layerSize3) + "]", "[M: " + str(momentum2) + ", L: " + str(layerSize1) + "]",
     "[M: " + str(momentum2) + ", L: " + str(layerSize2) + "]", "[M: " + str(momentum2)
     + ", L: " + str(layerSize3) + "]"]
+
+# Compare resoults
 alpha = .05
-
-for i in range(len(maxResults)):
-    if i == 0:
-        print("Current the best solution: ", namesOfEstimators[i])
-        idOfMax = i
-        continue
-
-    # print( "TEST DAW ", maxResults[i])
-    test = ttest_rel(maxResults[i], maxResults[idOfMax])
-    T = test.statistic
-    p = test.pvalue
-
-    if p > alpha:
-        print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " There are no significant statistical differences between ", namesOfEstimators[idOfMax], " and ", namesOfEstimators[i])
-    elif T > 0:
-        print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is better than ", namesOfEstimators[idOfMax])
-        idOfMax = i
-
-# mapOfResoults = [[0 for x in range(len(maxResults))] for y in range(len(maxResults))]
-
 tabWidth = len(maxResults)
-mapOfResoults = np.zeros(tabWidth * tabWidth)
+mapOfResults = np.zeros(tabWidth * tabWidth)
 for i in range(len(maxResults)):
     for j in range(i+1, len(maxResults)):
-
-
-        # # print( "TEST DAW ", maxResults[i])
-        # test = ttest_rel(maxResults[i], maxResults[idOfMax])
-        # T = test.statistic
-        # p = test.pvalue
-        #
-        # if p > alpha:
-        #     print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " There are no significant statistical differences between ", namesOfEstimators[idOfMax], " and ", namesOfEstimators[i])
-        # elif T > 0:
-        #     print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is better than ", namesOfEstimators[idOfMax])
-        #     idOfMax = i
 
         test = ttest_rel(maxResults[i], maxResults[j])
         T = test.statistic
         p = test.pvalue
-        # result = "p: " + str(p) + " T: " + str(T)
-        # print(result)
 
         if p > alpha:
-            mapOfResoults[i * tabWidth + j] = 0
-            mapOfResoults[j * tabWidth + i] = 0
+            print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)),
+                  " There are no significant statistical differences between ", namesOfEstimators[i], " and ", namesOfEstimators[j])
+            mapOfResults[i * tabWidth + j] = 0
+            mapOfResults[j * tabWidth + i] = 0
         elif T > 0:
-            mapOfResoults[i * tabWidth + j] = 1
-            mapOfResoults[j * tabWidth + i] = -1
+            print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is better set of parameters than ", namesOfEstimators[j])
+            mapOfResults[i * tabWidth + j] = 1
+            mapOfResults[j * tabWidth + i] = -1
         else:
-            mapOfResoults[i * tabWidth + j] = -1
-            mapOfResoults[j * tabWidth + i] = 1
+            print("p: ", str(round(p, 4)), " T: ", str(round(T, 4)), " ", namesOfEstimators[i], " is worst set of parameters than ", namesOfEstimators[j])
+            mapOfResults[i * tabWidth + j] = -1
+            mapOfResults[j * tabWidth + i] = 1
 
-print(mapOfResoults)
 
 # Reshape things into a 9x9 grid.
-mapOfResoults = mapOfResoults.reshape((tabWidth, tabWidth))
+mapOfResults = mapOfResults.reshape((tabWidth, tabWidth))
 
-# row_labels = namesOfEstimators
-# col_labels = namesOfEstimators
-# plt.matshow(mapOfResoults)
-# plt.xticks(range(tabWidth), col_labels)
-# plt.yticks(range(tabWidth), row_labels)
-#
-# xcoords = [0.5, 1.5, 2.5, 3.5, 4.5]
-# for xc in xcoords:
-#     plt.axvline(x=xc)
-#     # plt.ayvline(y=xc)
-#
-#
-# plt.show()
-#
-# data = pandas.DataFrame(mapOfResoults,
-#                         columns=namesOfEstimators)
-# checkerboard_table(data)
-# plt.show()
-
-data = pandas.DataFrame(mapOfResoults,
-                        columns=namesOfEstimatorsShort)
-checkerboard_table(data)
+# Draw diagram
+data = pandas.DataFrame(mapOfResults, columns=namesOfEstimatorsShort)
+draw_results(data)
 plt.show()
-# print("==================== DAWID ======================")
-#
-# for i in range(len(maxResults)):
-#     for j in range(i+1, len(maxResults)):
-#         test = ttest_rel(maxResults[i], maxResults[j])
-#
-#         print("sth dupa ", maxResults[i])
-#
-#         T = test.statistic
-#         p = test.pvalue
-#         result = "p: " + str(p) + " T: " + str(T)
-#         print(result)
-#
-#         if p > alpha:
-#             result = "Brak istotnych różnic statystycznych między " + namesOfEstimators[i] + " a " + namesOfEstimators[j] + "\n"
-#         elif T > 0:
-#             result = namesOfEstimators[i] + " osiągnął lepszy wynik od " + namesOfEstimators[j] + "\n"
-#         else:
-#             result = namesOfEstimators[j] + " osiągnął lepszy wynik od " + namesOfEstimators[i] + "\n"
-#         print(result)
 
-
+# Close file as std::out
 sys.stdout = original_stdout # Reset the standard output to its original value
 logFile.close()
