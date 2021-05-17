@@ -76,7 +76,7 @@ for i in range(len(Y_first_ilness)):
         Y[i] = 1
     else:
         Y[i] = 0
-    Y[i] = Y_first_ilness[i]
+    # Y[i] = Y_second_ilness[i]
 
 print("==================================")
 print("== Sick/healthy vector:")
@@ -116,7 +116,7 @@ numberOfEstimators = len(layerSizes)*len(momentums)
 numberOfObjects = len(X)
 numberOfRepeats = 5
 numberOfFolds = 2
-rskf = RepeatedStratifiedKFold(n_splits=numberOfFolds, n_repeats=numberOfRepeats, random_state=12345) # Może użyć tu zwykłej walidacji krzyżowej?
+rskf = RepeatedStratifiedKFold(n_splits=numberOfFolds, n_repeats=numberOfRepeats, random_state=12345)
 
 # create three-dimensional arary tp store scores
 # scores array 6x6 -> numberOfEstimators x numberOfFeatures
